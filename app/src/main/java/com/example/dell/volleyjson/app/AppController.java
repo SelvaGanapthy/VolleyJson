@@ -1,11 +1,13 @@
-package com.example.dell.volleyjson;
+package com.example.dell.volleyjson.app;
 
 import android.app.Application;
+import android.content.Context;
 import android.text.TextUtils;
-
+import com.example.dell.volleyjson.R;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.example.dell.volleyjson.activities.MainActivity;
 
 /**
  * Created by Dell on 11/29/2017.
@@ -14,13 +16,21 @@ import com.android.volley.toolbox.Volley;
 public class AppController extends Application {
     public static final String TAG = AppController.class.getSimpleName();
     RequestQueue mRequestQueue;
+    static Context context;
     static AppController mInstance;
+
+    public MainActivity mainActivity;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
         mInstance = this;
+        context = this.getApplicationContext();
+    }
+
+    public static Context getAppContext() {
+        return context;
     }
 
     public static synchronized AppController getInstance() {
