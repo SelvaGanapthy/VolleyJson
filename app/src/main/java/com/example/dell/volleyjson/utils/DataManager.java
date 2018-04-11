@@ -6,18 +6,26 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.dell.volleyjson.app.AppController;
+import com.example.dell.volleyjson.models.ContactsInfoModel;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by Dell on 12/5/2017.
  */
 
 public class DataManager {
-    private String urlJsonObj = "https://api.androidhive.info/volley/person_object.json";
-    private String StudentInfo = "http://androidblog.esy.es/jsonData.php";
+
+    private final String SERVER_URL_EX1 = "https://api.androidhive.info/volley/person_object.json";
+    private final String SERVER_URL_EX2 = "https://api.androidhive.info/contacts/";
+
     Context mContext;
     static DataManager mInstance;
 
@@ -33,36 +41,72 @@ public class DataManager {
         return mInstance;
     }
 
+    public void DataLoad(final boolean refresh) {
 
-    public void DataLoad() {
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET, StudentInfo, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest jsonReq = new JsonObjectRequest(Request.Method.GET, SERVER_URL_EX2, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                if (response != null) {
-                    try {
-                        String name = response.getString("name");
-                        String email = response.getString("email");
-                        JSONObject phone = response.getJSONObject("phone");
-                        String home = phone.getString("home");
-                        String mobile = phone.getString("mobile");
-                        Toast.makeText(AppController.getAppContext(), "" + name + " " + email + "", Toast.LENGTH_LONG).show();
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                ArrayList<ContactsInfoModel> ContactList = new ArrayList<>();
+                try {
+                    if (response != null && response.length() != 0) {
+
+                        if (response.getJSONArray("contacts").length() != 0) {
+                            JSONArray jaContacts = response.getJSONArray("contacts");
+                            for (int i = 0; i < jaContacts.length(); i++) {
+                                JSONObject joContact = (JSONObject) jaContacts.getJSONObject(i);
+                                ContactsInfoModel model = new ContactsInfoModel();
+                                model.setId(joContact.getString("id"));
+                                model.setName(joContact.getString("name"));
+                                model.setEmail(joContact.getString("email"));
+                                model.setAddress(joContact.getString("address"));
+                                JSONObject phone = joContact.getJSONObject("phone");
+                                model.setPhone_home(phone.getString("home"));
+                                model.setPhone_mobile(phone.getString("mobile"));
+                                model.setPhone_office(phone.getString("office"));
+                                ContactList.add(model);
+                            }
+
+
+                        }
+
+
+                        if (ContactList!=null)
+                        {
+                            if (refresh)
+                            {
+                                AppController.getInstance().mainActivity.refreshData(ContactList);
+                            }
+                            else
+                            {
+                                AppController.getInstance().mainActivity.getDataLoad(ContactList);
+
+                            }
+                        }
+
+
                     }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-//                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                Toast.makeText(AppController.getAppContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                // hide the progress dialog
 
+
+                Toast.makeText(AppController.getAppContext(),"Failed to Load",Toast.LENGTH_LONG).show();
 
             }
         });
-        AppController.getInstance().addToRequestQueue(jsonObjReq);
+
+        AppController.getInstance().addToRequestQueue(jsonReq, "");
     }
+
+
+
 
 }
